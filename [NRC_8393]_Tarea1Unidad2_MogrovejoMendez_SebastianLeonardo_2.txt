@@ -1,0 +1,122 @@
+sqlite3 C:\sqlite\db\DBPrograma_Ayuda_Clubes_FIFA.db
+.header on
+.mode column
+
+.mode csv
+.import C:\\sqlite\\db\\csv\\dataset_Personas.csv Persona
+.import C:\\sqlite\\db\\csv\\dataset_FIFA.csv FIFA
+.import C:\\sqlite\\db\\csv\\dataset_Confederaciones.csv Confederacion
+.import C:\\sqlite\\db\\csv\\dataset_Club.csv Club
+.import C:\\sqlite\\db\\csv\\dataset_Empleados.csv Empleado
+.import C:\\sqlite\\db\\csv\\dataset_AgentesFinanciero.csv AgFinanciero
+.import C:\\sqlite\\db\\csv\\dataset_Directivos.csv Directivo
+.import C:\\sqlite\\db\\csv\\dataset_Usuarios.csv Usuario
+.import C:\\sqlite\\db\\csv\\dataset_Continentes.csv Continente
+.import C:\\sqlite\\db\\csv\\dataset_Paises.csv Pais
+.import C:\\sqlite\\db\\csv\\dataset_Seleccion.csv Seleccion
+.import C:\\sqlite\\db\\csv\\dataset_JugadorConvocado.csv JugConvocado
+.import C:\\sqlite\\db\\csv\\dataset_Parametros.csv Parametro
+.import C:\\sqlite\\db\\csv\\dataset_ClubJugador.csv ClubJugador
+INSERT INTO Mundial VALUES('2022Qatar', '2022-11-20', '2022-12-18');
+
+HAVINGS
+
+1. Que agentes ganan mas de 5000
+
+select af.VarIdP,per.VarNmP as AgenteFinanciero,
+emp.IntSalEm as Salario from AgFinanciero af
+inner join Empleado emp on af.VarIdP = emp.VarIdP
+inner join Persona per on af.VarIdP = per.VarIdP
+group by af.VarIdP
+having emp.IntSalEm >= 5000;
+
+2. Que directivos tienen su rango mayor a 2
+
+select dir.VarIdP,per.VarNmP as Directivo,
+dir.IntRngDir as Rango from Directivo dir
+inner join Empleado emp on dir.VarIdP = emp.VarIdP
+inner join Persona per on emp.VarIdP = per.VarIdP
+group by dir.VarIdP
+having dir.IntRngDir > 2;
+
+3. Cuantos jugadores de cada club pasaron mas de 22 dias, 
+ordenar del que mas a menos tienen.
+
+select Club.VarNmClub as NombreClub,
+count(JC.VarIdP) from ClubJugador CJC
+inner join Club on CJC.VarIdClub = Club.VarIdClub
+inner join JugConvocado JC on CJC.VarIdP = JC.VarIdP
+group by Club.VarIdClub
+having JC.IntDyMundialJc > 22
+order by count(JC.VarIdP) DESC;
+
+GROUP BY
+
+4. Cuantos jugadores tiene cada continente
+.width 20
+select conti.VarNmContin as Continente,count(JC.VarIdP) from JugConvocado JC
+inner join Seleccion selec on JC.VarIdSeleccion = selec.VarIdSeleccion
+inner join Pais on selec.VarIdPais = Pais.VarIdPais
+inner join Continente conti on Pais.VarIdContin = conti.VarIdContin
+group by conti.VarIdContin;
+
+5. Cuantas selecciones se relacionan con cada confederacion
+
+select Conf.VarNmConf as Confederacion,
+count(distinct CJC.VarIdSeleccion) from ClubJugador CJC
+inner join Club on CJC.VarIdClub = Club.VarIdClub
+inner join Confederacion Conf on Club.VarIdConf = Conf.VarIdConf
+group by Conf.VarIdConf;
+
+6. Cuantas selecciones que tengan la letra "e" en su nombre tiene cada continente
+
+select conti.VarNmContin as Continente,
+count(selec.VarIdSeleccion) from Seleccion selec
+inner join Pais on selec.VarIdPais = Pais.VarIdPais
+inner join Continente conti on Pais.VarIdContin = conti.VarIdContin
+where selec.VarNmSeleccion like "%e%"
+group by conti.VarIdContin;
+
+AGREGACION
+
+7. Liste a los agentes financieros que tengan ubicado su banco en "GB", 
+añadir una columna de que significa segun el codigo de paises internacional
+
+select per.VarNmP as AgenteFinanciero,af.VarBnkCtry as CodigoBanco,
+'Reino Unido de Gran Bretania e Irlanda del Norte' as Pais from AgFinanciero af
+inner join Empleado emp on af.VarIdP = emp.VarIdP
+inner join Persona per on af.VarIdP = per.VarIdP;
+
+8. Que jugadores no asistiran a la copa del mundo segun si su pais tiene como asistencia,
+añadir una columna que diga "No participa"
+
+select per.VarNmP as Jugadores,Pais.VarAtndPais,
+'No participa' as Asistencia from JugConvocado JC
+inner join Persona per on JC.VarIdP = per.VarIdP
+inner join Seleccion selec on JC.VarIdSeleccion = selec.VarIdSeleccion
+inner join Pais on selec.VarIdPais = Pais.VarIdPais
+where Pais.VarAtndPais like "False";
+
+WHERE
+
+9. Listar a los empleados no binarios que sean directivos
+
+select dir.VarIdP,per.VarNmP as Directivos,
+per.VarGenderP as Genero from Directivo dir
+inner join Empleado emp on dir.VarIdP = emp.VarIdP
+inner join Persona per on dir.VarIdP = per.VarIdP
+where per.VarGenderP like "NB";
+
+10. Liste el correo y clave de acceso de cada usuario cuya longitud del correo sea menor a 20
+
+select per.VarAddrP as CorreoUsuario,
+us.VarAccsKey as ClaveAcceso from Usuario us
+inner join Empleado emp on us.VarIdP = emp.VarIdP
+inner join Persona per on emp.VarIdP = per.VarIdP
+where length(per.VarAddrP) < 20;
+
+
+
+
+
+
